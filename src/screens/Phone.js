@@ -3,7 +3,9 @@ import {
   View,
   Text,
   ScrollView,
-  StyleSheet
+  StyleSheet,
+  Alert,
+  AsyncStorage
 } from "react-native";
 import colors from "../style/color/index"
 import InputField from "../components/InputField"
@@ -11,7 +13,64 @@ import NextArrowButton from "../buttons/NextArrowButton"
 import firebase from '@react-native-firebase/app'
 import database from '@react-native-firebase/database'
 export default class Phone extends Component {
+  constructor(props){
+    super(props)
+    //specified state for changing text in frontend
+    this.state={
+      phone:0,
+      access:0,
+      
+    }
+    // global.login
+    //binding functions
+    this.handlePhoneChange=this.handlePhoneChange.bind(this)
+    this.handleAccessChange=this.handleAccessChange.bind(this)
+    
+  }
+ 
+  
+  async componentDidMount(){
+     await this.fetchDatabase()
+  }
     database=firebase.database();
+    fetchDatabase= async()=>{
+      database().ref('phone/').on('value', function (snapshot) {
+        //retrieve snapshot of database
+        snapshot.forEach(function(child){
+          //retrieve phone numbers
+          global.phoneNumber=child.key
+          //retrieve access keys
+          global.accessKey=child.val().access
+          console.log('Firebase:'+phoneNumber)
+          console.log('Firebase key:'+accessKey)
+        })
+    });
+    }
+    handlePhoneChange (phone){
+      this.setState({phone:phone})
+      //change value of phone state
+    }
+    handleAccessChange= access =>{
+      this.setState({access:access})
+      //change value of access key state
+    }
+  Login=()=>{
+    var phoneValue=this.state.phone
+    var accessValue=this.state.access
+    //check values data retrieved from database and frontend
+    if((phoneNumber==phoneValue)&&(accessKey==accessValue)){
+        this.props.navigation.navigate('Level')
+        // global.login=true
+        AsyncStorage.setItem('login','true')
+    }
+    else{
+      if(phoneNumber!=phoneValue){
+
+      }
+    }
+  }
+ 
+  
   render() {
     return (
         <View style={styles.scrollViewWrapper}>
@@ -25,7 +84,10 @@ export default class Phone extends Component {
               textColor={colors.black} 
               borderBottomColor={colors.black} 
               inputType="number" 
-              customStyle={{marginBottom:30}}    
+              customStyle={{marginBottom:30}}
+              value={this.state.phone}
+              onChangeText={this.handlePhoneChange}
+              
             /><Text></Text><Text></Text>
             <InputField 
               labelText="ACCESS KEY" 
@@ -34,24 +96,20 @@ export default class Phone extends Component {
               textColor={colors.black} 
               borderBottomColor={colors.black} 
               inputType="number" 
-              customStyle={{marginBottom:30}}    
+              customStyle={{marginBottom:30}}  
+              value={this.state.access}
+              onChangeText={this.handleAccessChange}  
             />
           </ScrollView>
        
           <NextArrowButton
-          onPress={this.readUserData}
+          onPress={this.Login}
           />
          </View>
         
     );
   }
-  readUserData= ()=> {
-    database().ref('phone/').on('value', function (snapshot) {
-        console.log(snapshot.val())
-        console.log('Hello')  
-    });
-    this.props.navigation.navigate('Level')
-}
+  
 }
 const styles = StyleSheet.create({
   scrollViewWrapper: {

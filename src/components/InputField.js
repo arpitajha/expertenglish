@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { View, Text, StyleSheet, TextInput, setCustomText } from "react-native";
 import { Colors } from "react-native/Libraries/NewAppScreen";
 class InputField extends Component {
+  
   render() {
     const {
         labelText,
@@ -10,7 +11,7 @@ class InputField extends Component {
         textColor,
         borderBottomColor,
         inputType,
-        customStyle
+        customStyle,
       } = this.props;
       const color = labelColor || Colors.white;
       const fontSize = labelTextSize || 14;
@@ -20,14 +21,14 @@ class InputField extends Component {
         <View style={[customStyle, styles.wrapper]}>
           <Text style={[{ color, fontSize }, styles.label]}>{labelText}</Text>
           <TextInput
+            {...this.props}
             autoCorrect={false}
             style={[
               { color: inputColor, borderBottomColor: borderBottom },
               styles.inputField
             ]}
-            secureTextEntry={inputType === "password"}
             maxLength={10}
-            keyboardType='numeric'
+            keyboardType='numeric' 
           />
         </View>
       );

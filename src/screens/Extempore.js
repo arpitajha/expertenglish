@@ -1,26 +1,89 @@
-import React from 'react';
-import {StyleSheet, View, Text, TouchableOpacity} from 'react-native';
+import React, { Component } from "react";
+import {StyleSheet, View, Text, TouchableOpacity, PermissionsAndroid} from 'react-native';
 import {Icon} from 'react-native-elements';
+import AudioRecord from 'react-native-audio-record'
+import { Buffer } from 'buffer';
+import firebase from '@react-native-firebase/app'
+import database from '@react-native-firebase/database'
+export default class Extempore extends Component {
+  constructor(){
+    super()
+    this.state={
+      record_status: false
+    } 
+  }
 
-export default class Extempore extends React.Component {
+   async componentDidMount(){
+    await this.getPermission()
+    await this.fetchDatabase()
+    const options = {
+      sampleRate: 16000,
+      channels: 1,
+      bitsPerSample: 16,
+      wavFile: 'test.wav'
+    };
+    AudioRecord.init(options);
+    // AudioRecord.on('data', data => {
+    //   const chunk = Buffer.from(data, 'base64');
+    //   console.log('chunk size', chunk.byteLength);
+    //   // do something with audio chunk
+    // });
+  }
+  database=firebase.database();
+  fetchDatabase= ()=>{
+  //   database().ref('phone/'+phoneNumber+'/level').on('value', function (snapshot) {
+  //     //retrieve snapshot of database
+  //     snapshot.forEach(function(child){
+  //       //retrieve phone numbers
+  //       global.level=child.key
+  //       //retrieve access keys
+  //       console.log('Level:'+level)
+  //     })
+  // });
+    database().ref('extempore/').on('value', function (snapshot) {
+      //retrieve snapshot of database
+      snapshot.forEach(function(child){
+        //retrieve phone numbers
+        global.level=child.key
+        //retrieve access keys
+        console.log('Level:'+level)
+      })
+  });
+  }
   text_state = {TextHolder: 'Hey There Its me'};
   changeText = () => {
     this.setText({TextHolder: 'This is new text'});
   };
-
-  state = {record_status: false};
-  getInitialState = () => {
-    return {record_status: false};
-  };
   onPress = () => {
-    this.recordStatusChange();
-  };
-
-  recordStatusChange = () => {
-    this.state.record_status === false
-      ? this.setState({record_status: true})
-      : this.setState({record_status: false});
-  };
+    if(this.state.record_status === false){
+      this.setState({record_status: true})
+      AudioRecord.start();
+      console.log('Recording')
+    }
+    else{
+      this.setState({record_status: false})
+      AudioRecord.stop();
+      console.log('Recording stopped')
+    } 
+  }
+  requestPermissionAudio=async ()=>{
+      const granted=await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO, 
+      ).catch((err)=>console.log(err));
+     return granted===PermissionsAndroid.RESULTS.GRANTED;    
+  }
+  requestPermissionStorage=async ()=>{
+    const granted=await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      
+    ).catch((err)=>console.log(err));
+   return granted===PermissionsAndroid.RESULTS.GRANTED;    
+}
+  getPermission=async()=>{
+    await this.requestPermissionAudio()
+    await this.requestPermissionStorage()
+  }
+ 
 
   render() {
     return (
